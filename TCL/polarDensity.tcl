@@ -1,7 +1,7 @@
 
  package require pbctools
- set UTILS "/u2/home_u2/lms464/github/JPC_Special/common/utils" 
- set QWRAP "/u1/home/lms464/lms464/github/qwrap"
+ set UTILS "./helpers/" 
+ set QWRAP ;# https://github.com/jhenin/qwrap
 source $UTILS/BinTools.tcl
 load ${QWRAP}/qwrap.so
 #
@@ -349,7 +349,7 @@ proc theta_histogram {singleFrame_upper singleFrame_lower Ntheta } {
 proc polarDensityBin { outfile species Rmin Rmax dr Ntheta} {
 
 	;# funciton that sets CG'ed chains and selects alpha helecies
-	source /u2/home_u2/lms464/github/JPC_Special/common/grace/assign_helices_2BG9_CG_lms2.tcl
+	source asign/assign_helices_2BG9_CG_lms2.tcl
 
 	;# see resnamer
     set species [resnamer ${species}]
