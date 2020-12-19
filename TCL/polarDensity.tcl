@@ -2,11 +2,10 @@
  package require pbctools
  set UTILS "/u2/home_u2/lms464/github/JPC_Special/common/utils" 
  set QWRAP "/u1/home/lms464/lms464/github/qwrap"
-# 
 source $UTILS/BinTools.tcl
-# ;# TODO What is the point of outputing each lipid species to a different file?
-# 
 load ${QWRAP}/qwrap.so
+#
+#  Developed using Martini CG'ed membranes
 # 
 # ;#Lipid_Saturation_HeadG are a series of macros to parse Martini lipids
 # source ${UTILS}/Lipid_Saturation_HeadG.tcl
