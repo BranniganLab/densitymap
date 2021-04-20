@@ -1,7 +1,7 @@
 
- package require pbctools
- set UTILS "./helpers/" 
- set QWRAP ;# https://github.com/jhenin/qwrap
+package require pbctools
+set UTILS "./helpers/" 
+set "/home/liam/Censere/qwrap-master" ;# https://github.com/jhenin/qwrap
 source $UTILS/BinTools.tcl
 load ${QWRAP}/qwrap.so
 #
@@ -108,29 +108,34 @@ proc z_mid {init_frm nframes} {
 ;# accross both leaflets
 proc Protein_Position {{a ""}} {
 	;# list for the chain names
-    set chain_names [list "A" "B" "C" "D" "E"]
+    #set chain_names [list "A" "B" "C" "D" "E"]
     ;# finds the center of the membranes
     set zed [z_mid 0 20]
-	set occupancy [list 1 2 3 4]
+	set occupancy [list 2 3 4 5 6 7 8 9]
 	;# calculates the center of mass for subunit alpha helices in both leaflets
 	foreach eq {"<" ">"} eqtxt {"lwr" "upr"} {
-		set fout [open "/u2/home_u2/lms464/github/JPC_Special/tasks/17_Aim1/Data/Protein${a}_coords_${eqtxt}.dat" w]
+		set fout [open "./Protein_coords_${eqtxt}.dat" w]
         puts $fout  "# chain A ooc1r occ1the occ2r occ2the... "
-        foreach chnm $chain_names {
+        #foreach chnm $chain_names {
             foreach occ $occupancy {
-                set sel [atomselect top "(chain ${chnm}) and (occupancy $occ and name BB) and (z ${eq} $zed)" frame 0]
+                if {${eq} == ">"} {
+                    if {${occ} == 9} {
+                        continue
+                    }
+                }
+                set sel [atomselect top "(occupancy $occ and backbone) and (z ${eq} $zed)" frame 0]
                 set com [measure center $sel weight mass]
                 $sel delete
                 set x [lindex $com 0]
                 set y [lindex $com 1]
                 set r [expr sqrt($x*$x+$y*$y)]
                 set theta [get_theta $x $y]
-                puts "chain ${chnm} and occupancy $occ $r $theta"
+                puts "occupancy [expr $occ-1] $r $theta"
 
                 puts -nonewline $fout "$r $theta "
             }
             puts $fout ""
-        }
+        #}
         close $fout
     }
 }
@@ -349,12 +354,12 @@ proc theta_histogram {singleFrame_upper singleFrame_lower Ntheta } {
 proc polarDensityBin { outfile species Rmin Rmax dr Ntheta} {
 
 	;# funciton that sets CG'ed chains and selects alpha helecies
-	source asign/assign_helices_2BG9_CG_lms2.tcl
+	source /home/liam/UDel/resources/TCL_scripts/assign_TM.tcl
 
 	;# see resnamer
     set species [resnamer ${species}]
     
-    set sel [atomselect top "$species"]
+    set sel [atomselect top "$species and name P"]
 	set sel_num [$sel num]
 	
 	if {$sel_num == 0} {
@@ -362,11 +367,11 @@ proc polarDensityBin { outfile species Rmin Rmax dr Ntheta} {
 	}
 	
 	;# Center's system (weak hack)
- 	Center_System "occupancy 1 to 4 and name BB"
-    Center_System "occupancy 1 to 4 and name BB"
-    Center_System "occupancy 1 to 4 and name BB"
+ 	Center_System "occupancy 2 to 9 and name BB"
+    Center_System "occupancy 2 to 9 and name BB"
+    Center_System "occupancy 2 to 9 and name BB"
     ;# aligns protein
- 	Align "occupancy 1 to 4 and name BB"
+ 	Align "occupancy 9 to 9 and name BB"
  	;# outputs protein positions
     Protein_Position   
     ;# initialize some constants
@@ -383,7 +388,7 @@ proc polarDensityBin { outfile species Rmin Rmax dr Ntheta} {
 
 	;# builds header for output file (extimates expected density, membrane area...)	
     foreach lu [list $low_f $upp_f] zed [list "(z<0)" "(z>0)"] {
-        set sel [ atomselect top "(($species) and $zed) and (name PO4 ROH)"  frame 0]
+        set sel [ atomselect top "(($species) and $zed) and (name P)"  frame 0]
         set sel_num [llength [lsort -unique [$sel get resid] ] ]
         if {$sel_num < 1} {
             set num_beads 0
@@ -391,7 +396,7 @@ proc polarDensityBin { outfile species Rmin Rmax dr Ntheta} {
         } else {
 	        set sel_resid [lsort -unique [$sel get resid] ]
 	        $sel delete
-	        set beads [atomselect top "${species} and (resid $sel_resid) and (not name PO4)" frame 0]
+	        set beads [atomselect top "${species} and (resid $sel_resid) and (name P)" frame 0]
 	        set num_beads [$beads num]
 	        set expected [expr 1.0 * $num_beads/$area]
 	        $beads delete
