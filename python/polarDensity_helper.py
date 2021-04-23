@@ -13,6 +13,7 @@ import matplotlib.gridspec as gridspec
 import pandas as pdq
 import os
 from matplotlib.colorbar import Colorbar
+import pandas as pd
 
 
 class MidpointNormalize(mcol.Normalize):
