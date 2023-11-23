@@ -1,9 +1,9 @@
 
  package require pbctools
- set UTILS "./helpers/" 
- set QWRAP ;# https://github.com/jhenin/qwrap
+ set UTILS "~/Projects/densitymap/TCL/helpers" 
+# set QWRAP ;# https://github.com/jhenin/qwrap
 source $UTILS/BinTools.tcl
-load ${QWRAP}/qwrap.so
+load ${UTILS}/qwrap.so
 #
 #  Developed using Martini CG'ed membranes
 # 
@@ -18,8 +18,8 @@ load ${QWRAP}/qwrap.so
 #set HeadNames [atomselect top "name PO4 ROH B2"] ;#B2 is DDM
 #set lipids [lsort -unique [$HeadNames get resname]]
 #$HeadNames delete
-#set RMax 40.
-#set RMin 5.
+#set Rmax 40.
+#set Rmin 5.
 #set dr 2.
 #set Ntheta 30
 #foreach lip in $lipids {
@@ -349,7 +349,7 @@ proc theta_histogram {singleFrame_upper singleFrame_lower Ntheta } {
 proc polarDensityBin { outfile species Rmin Rmax dr Ntheta} {
 
 	;# funciton that sets CG'ed chains and selects alpha helecies
-	source asign/assign_helices_2BG9_CG_lms2.tcl
+	source ${UTILS}/assign_helices_2BG9_CG_lms2.tcl
 
 	;# see resnamer
     set species [resnamer ${species}]
