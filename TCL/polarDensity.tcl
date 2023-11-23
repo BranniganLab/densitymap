@@ -1,9 +1,12 @@
 
  package require pbctools
- set UTILS "~/Projects/densitymap/TCL/helpers" 
+ set UTILS "./TCL/helpers" 
 # set QWRAP ;# https://github.com/jhenin/qwrap
 source $UTILS/BinTools.tcl
-load ${UTILS}/qwrap.so
+set CENTER_AND_ALIGN 0
+set USE_QWRAP 0
+
+if {$USE_QWRAP == 1} {load ${UTILS}/qwrap.so}
 #
 #  Developed using Martini CG'ed membranes
 # 
@@ -125,7 +128,7 @@ proc Protein_Position {{a ""}} {
                 set y [lindex $com 1]
                 set r [expr sqrt($x*$x+$y*$y)]
                 set theta [get_theta $x $y]
-                puts "chain ${chnm} and occupancy $occ $r $theta"
+                #puts "chain ${chnm} and occupancy $occ $r $theta"
 
                 puts -nonewline $fout "$r $theta "
             }
@@ -192,7 +195,7 @@ proc Center_System {inpt} {
             return
         }
         
-        if {([lindex $pbc_angles 0]!=90.0) && ([lindex $pbc_angles 0]!=90.0) && ([lindex $pbc_angles 0]!=90.0)} {
+        if {($USE_QWRAP==0) || (([lindex $pbc_angles 0]!=90.0) && ([lindex $pbc_angles 0]!=90.0) && ([lindex $pbc_angles 0]!=90.0))} {
             puts "qwrap may not be optimal for your system...\n"
             puts "Running pbc wrap. To verify proper centering"
             puts "pbc wrap will be run multiple times" ; after 100
@@ -313,7 +316,7 @@ proc bin_frame {shell species dtheta frm } {
         }
 
     }
-    puts "$theta_high_out $theta_low_out"
+    #puts "$theta_high_out $theta_low_out"
     return [list $theta_high_out $theta_low_out] 
 }
 
@@ -346,8 +349,11 @@ proc theta_histogram {singleFrame_upper singleFrame_lower Ntheta } {
 ;########################################################################################
 ;# polarDensity Funciton
 
-proc polarDensityBin { outfile species Rmin Rmax dr Ntheta} {
+proc polarDensityBin { outfile species Rmin Rmax dr Ntheta dt sample_frame} {
 	global UTILS
+    global CENTER_AND_ALIGN
+
+
 	;# funciton that sets CG'ed chains and selects alpha helecies
 	source ${UTILS}/assign_helices_ELIC_CG.tcl
 
@@ -362,17 +368,18 @@ proc polarDensityBin { outfile species Rmin Rmax dr Ntheta} {
 	}
 	
 	;# Center's system (weak hack)
+    if {$CENTER_AND_ALIGN == 1} {
  	Center_System "occupancy 1 to 4 and name BB"
     Center_System "occupancy 1 to 4 and name BB"
     Center_System "occupancy 1 to 4 and name BB"
     ;# aligns protein
  	Align "occupancy 1 to 4 and name BB"
+    }
  	;# outputs protein positions
     Protein_Position   
     ;# initialize some constants
-	set dt 1
+
 	set nframes [molinfo top get numframes]
-  	set sample_frame 100
 	set delta_frame [expr ($nframes - $sample_frame) / $dt]
 	set area [get_avg_area top]
     $sel delete
@@ -402,7 +409,7 @@ proc polarDensityBin { outfile species Rmin Rmax dr Ntheta} {
 
 	#loop over radial shells
 	for {set ri $Rmin} { $ri<=${Rmax}} { set ri [expr $ri + $dr]} {
-		puts "Ring {$ri [expr ${ri}+${dr}]}"
+		puts "Now on shell {$ri [expr ${ri}+${dr}]}"
 		set rf [expr $ri + $dr]
 		set rf2 [expr $rf*$rf]
 		set ri2 [expr $ri*$ri]
@@ -422,3 +429,4 @@ proc polarDensityBin { outfile species Rmin Rmax dr Ntheta} {
 	close $low_f
 	close $upp_f
 }
+            
