@@ -178,6 +178,7 @@ proc Center_System {inpt} {
     ;#		Coarse Grained proteins that move accross
     ;#		PBC tend to have an issue and need to be
     ;#		centered mulitple times
+    global USE_QWRAP
     set pbc_angles [molinfo top get {alpha beta gamma}]
     
     set sel [atomselect top "$inpt" frame 0]
