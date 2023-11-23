@@ -306,7 +306,7 @@ proc bin_frame {shell species dtheta frm } {
         }
         set x [$thislipid get x]
         set y [$thislipid get y]
-        $thislipid delete
+        
         set theta [get_theta $x $y]
         set ti [expr int($theta/$dtheta)] 
         #determine theta bin
@@ -315,6 +315,8 @@ proc bin_frame {shell species dtheta frm } {
         } else {
             lappend theta_high_out $ti
         }
+        #$thislipid set user [expr $ti+1]
+        $thislipid delete
 
     }
     #puts "$theta_high_out $theta_low_out"
