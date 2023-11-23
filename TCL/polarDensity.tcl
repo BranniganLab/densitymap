@@ -114,7 +114,7 @@ proc Protein_Position {{a ""}} {
 	set occupancy [list 1 2 3 4]
 	;# calculates the center of mass for subunit alpha helices in both leaflets
 	foreach eq {"<" ">"} eqtxt {"lwr" "upr"} {
-		set fout [open "/u2/home_u2/lms464/github/JPC_Special/tasks/17_Aim1/Data/Protein${a}_coords_${eqtxt}.dat" w]
+		set fout [open "./Protein${a}_coords_${eqtxt}.dat" w]
         puts $fout  "# chain A ooc1r occ1the occ2r occ2the... "
         foreach chnm $chain_names {
             foreach occ $occupancy {
@@ -313,7 +313,7 @@ proc bin_frame {shell species dtheta frm } {
         }
 
     }
-    
+    puts "$theta_high_out $theta_low_out"
     return [list $theta_high_out $theta_low_out] 
 }
 
@@ -347,9 +347,9 @@ proc theta_histogram {singleFrame_upper singleFrame_lower Ntheta } {
 ;# polarDensity Funciton
 
 proc polarDensityBin { outfile species Rmin Rmax dr Ntheta} {
-
+	global UTILS
 	;# funciton that sets CG'ed chains and selects alpha helecies
-	source ${UTILS}/assign_helices_2BG9_CG_lms2.tcl
+	source ${UTILS}/assign_helices_ELIC_CG.tcl
 
 	;# see resnamer
     set species [resnamer ${species}]
