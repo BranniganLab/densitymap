@@ -315,7 +315,7 @@ proc bin_frame {shell species dtheta frm } {
         } else {
             lappend theta_high_out $ti
         }
-        #$thislipid set user [expr $ti+1]
+        $thislipid set user [expr $ti+1]
         $thislipid delete
 
     }
