@@ -273,7 +273,7 @@ proc local_mid_plane {atsel_in frame_i} {
 	if {[lindex ${sel_Z} $ind] < [lindex ${sel_Z} end] } { 
 		return 1 
 	} else { 
-		return 0
+		return -1
 	}
 }
 
@@ -293,8 +293,9 @@ proc bin_frame {shell species dtheta frm } {
         ;# selection to count
         set a "($species and index $indx)"
         ;# selection to determine leaflet
-        set b "(resid $resd)" 
+        set b "(resid $resd and not name W BB SC1 SC2 SC3 SC4)" ;#fragile hack to avoid non lipid beads with the same resid, does not exclude IONS and needs updating ASAP
         set thislipid [atomselect top $a frame $frm]
+        set high_low 0 ;#reinitialize
         if {[string length ${species}] == 2} {
 	    	if {[$thislipid get name] == "PO4"} {
 	        	continue
@@ -306,14 +307,17 @@ proc bin_frame {shell species dtheta frm } {
         }
         set x [$thislipid get x]
         set y [$thislipid get y]
-        
+        $thislipid set user2 $high_low
+
         set theta [get_theta $x $y]
         set ti [expr int($theta/$dtheta)] 
         #determine theta bin
         if {$high_low > 0} {
             lappend theta_low_out $ti
-        } else {
+        } elseif {$high_low <0} {
             lappend theta_high_out $ti
+        } else {
+            puts "WARNING: lipid $resd did not get assigned a leaflet"
         }
         $thislipid set user [expr $ti+1]
         $thislipid delete
