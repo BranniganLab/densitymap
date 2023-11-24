@@ -107,9 +107,11 @@ proc z_mid {init_frm nframes} {
     return [expr 1.0*[vecsum $z_list]/([llength $z_list]) ]
 }
 
-;# Ouputs position of the centered protein in a membrane
-;# accross both leaflets
-proc Protein_Position {{a ""}} {
+
+
+;# Ouputs position of a pentameric protein in a membrane
+;# across both leaflets (as written by Liam Sharp for nAChR)
+proc Pentamer_protein_Position {{a ""}} {
 	;# list for the chain names
     set chain_names [list "A" "B" "C" "D" "E"]
     ;# finds the center of the membranes
@@ -129,7 +131,7 @@ proc Protein_Position {{a ""}} {
                 set r [expr sqrt($x*$x+$y*$y)]
                 set theta [get_theta $x $y]
                 #puts "chain ${chnm} and occupancy $occ $r $theta"
-
+                
                 puts -nonewline $fout "$r $theta "
             }
             puts $fout ""
@@ -137,6 +139,36 @@ proc Protein_Position {{a ""}} {
         close $fout
     }
 }
+
+;#More generic function for outputting protein positions
+proc Protein_Position {chain_names helix_occupancy_list {a ""} } {
+	;# list for the chain names
+    #set chain_names [list "A" "B" "C" "D" "E"]
+    ;# finds the center of the membranes
+    set zed [z_mid 0 20]
+	;# calculates the center of mass for subunit alpha helices in both leaflets
+    puts "Writing coordinates for [llength $chain_names] chains and [llength $helix_occupancy_list] helices per chain"
+	foreach eq {"<" ">"} eqtxt {"lwr" "upr"} {
+		set fout [open "./Protein${a}_coords_${eqtxt}.dat" w]
+        puts $fout  "# chain A ooc1r occ1the occ2r occ2the... "
+        foreach chnm $chain_names {
+            foreach occ $helix_occupancy_list {
+                set sel [atomselect top "(chain ${chnm}) and (occupancy $occ and name BB) and (z ${eq} $zed)" frame 0]
+                set com [measure center $sel weight mass]
+                $sel delete
+                set x [lindex $com 0]
+                set y [lindex $com 1]
+                set r [expr sqrt($x*$x+$y*$y)]
+                set theta [get_theta $x $y]
+                #puts "chain ${chnm} and occupancy $occ $r $theta"
+                puts -nonewline $fout "$r $theta "
+            }
+            puts $fout ""
+        }
+        close $fout
+    }
+}
+
 ;# calculates the average chain length per lipid species
 proc avg_acyl_chain_len {species} {
     
@@ -384,13 +416,10 @@ proc theta_histogram {singleFrame_upper singleFrame_lower Ntheta } {
 ;########################################################################################
 ;# polarDensity Funciton
 
-proc polarDensityBin { outfile species Rmin Rmax dr Ntheta dt sample_frame} {
+proc polarDensityBin { outfile species Rmin Rmax dr Ntheta dt sample_frame protein_chain_list helix_list} {
 	global UTILS
     global CENTER_AND_ALIGN
 
-
-	;# funciton that sets CG'ed chains and selects alpha helecies
-	source ${UTILS}/assign_helices_ELIC_CG.tcl
 
 	;# see resnamer
     set species [resnamer ${species}]
@@ -411,7 +440,8 @@ proc polarDensityBin { outfile species Rmin Rmax dr Ntheta dt sample_frame} {
  	Align "occupancy 1 to 4 and name BB"
     }
  	;# outputs protein positions
-    Protein_Position   
+    #Pentamer_protein_Position
+    Protein_Position $protein_chain_list $helix_list
     ;# initialize some constants
 
 	set nframes [molinfo top get numframes]
