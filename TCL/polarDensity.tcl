@@ -291,7 +291,7 @@ proc bin_over_frames {shell species dtheta sample_frame nframes Ntheta dt ri rf 
 
 
 ;# Determines if the lipid is in the outer or iner leaflet and sets the user value accordingly
-;#
+;# Returns +1 if the lipid is in the upper leaflet and -1 if it is in the lower leaflet 
 proc local_mid_plane {atsel_in frame_i} {
 
 
@@ -302,16 +302,18 @@ proc local_mid_plane {atsel_in frame_i} {
     }
     set sel_Z [${sel_resid} get z] 
 	if {[lindex ${sel_Z} $ind] < [lindex ${sel_Z} end] } { 
-        $sel_resid set user2 1
-		return 1 
-        
-	} else { 
         $sel_resid set user2 -1
 		return -1 
+        
+	} else { 
+        $sel_resid set user2 1
+		return 1 
 	}
     $sel_resid delete
 }
 
+;# Calculates the total number of lipids and beads of the given species in each leaflet 
+;# Returns the following list : [[lower_leaflet_beads lower_leaflet_lipids] [upper_leaflet_beads upper_leaflet_lipids]] 
 proc get_leaflet_totals {species frame_i} {
     set sel [ atomselect top "(($species)) and (name PO4 ROH)"  frame $frame_i]
     set sel_num [llength [lsort -unique [$sel get resid] ] ]
@@ -327,7 +329,7 @@ proc get_leaflet_totals {species frame_i} {
             set leaflet [local_mid_plane $selstring $frame_i]
         }   
         #count the number of lipids and the number of beads in each leaflet
-        foreach leaf [list "(user2<0)" "(user2>0)"] {
+        foreach leaf [list  "(user2<0)" "(user2>0)"] {
             set sel [ atomselect top "(${species} and $leaf)"  frame $frame_i]
             set num_beads [$sel num]
             set num_lipids [llength [lsort -unique [$sel get resid] ]]
