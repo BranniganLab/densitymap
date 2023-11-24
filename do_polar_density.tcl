@@ -14,5 +14,5 @@ set sample_frame 0
 
 source ${UTILS}/assign_helices_ELIC_CG.tcl
 foreach lip $lipids {
-	polarDensityBin $lip.dat $lip $Rmin $Rmax $dr $Ntheta $dt $sample_frame	[list "A B C D E"] [list "1 2 3 4"]
+	polarDensityBin $lip.dat $lip $Rmin $Rmax $dr $Ntheta $dt $sample_frame	[list A B C D E] [list 1 2 3 4]
 }
