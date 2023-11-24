@@ -258,8 +258,8 @@ proc bin_over_frames {shell species dtheta sample_frame nframes Ntheta dt ri rf 
 }
 
 
-;# Determines if the lipid is in the outer or iner leaflet,
-;#  based on the lipid resid
+;# Determines if the lipid is in the outer or iner leaflet and sets the user value accordingly
+;#
 proc local_mid_plane {atsel_in frame_i} {
 
 
@@ -269,14 +269,42 @@ proc local_mid_plane {atsel_in frame_i} {
     	set ind 0
     }
     set sel_Z [${sel_resid} get z] 
-    $sel_resid delete
 	if {[lindex ${sel_Z} $ind] < [lindex ${sel_Z} end] } { 
+        $sel_resid set user2 1
 		return 1 
+        
 	} else { 
-		return -1
+        $sel_resid set user2 -1
+		return -1 
 	}
+    $sel_resid delete
 }
 
+proc get_leaflet_totals {species frame_i} {
+    set sel [ atomselect top "(($species)) and (name PO4 ROH)"  frame $frame_i]
+    set sel_num [llength [lsort -unique [$sel get resid] ] ]
+    set sel_resid_list [lsort -unique [$sel get resid] ]
+    set totals {}
+    $sel delete
+    if {$sel_num < 1} {
+        set totals [[list 0 0] [list 0 0]] 
+    } else {
+        #assign leaflets to user2 field of each bead for this species
+        foreach sel_resid $sel_resid_list {
+            set selstring "${species} and (resid $sel_resid) and (not name PO4 ROH)"
+            set leaflet [local_mid_plane $selstring $frame_i]
+        }   
+        #count the number of lipids and the number of beads in each leaflet
+        foreach leaf [list "(user2<0)" "(user2>0)"] {
+            set sel [ atomselect top "(${species} and $leaf)"  frame $frame_i]
+            set num_beads [$sel num]
+            set num_lipids [llength [lsort -unique [$sel get resid] ]]
+            lappend totals [list $num_beads $num_lipids]
+            $sel delete
+        }
+    }
+    return $totals
+}
 
 
 ;# Collects data for a bin in a single frame
@@ -396,22 +424,15 @@ proc polarDensityBin { outfile species Rmin Rmax dr Ntheta dt sample_frame} {
 	set dtheta [expr 360.0/(1.0*($Ntheta))]
 
 	;# builds header for output file (extimates expected density, membrane area...)	
-    foreach lu [list $low_f $upp_f] zed [list "(z<0)" "(z>0)"] {
-        set sel [ atomselect top "(($species) and $zed) and (name PO4 ROH)"  frame 0]
-        set sel_num [llength [lsort -unique [$sel get resid] ] ]
-        if {$sel_num < 1} {
-            set num_beads 0
-        	set expected 0
-        } else {
-	        set sel_resid [lsort -unique [$sel get resid] ]
-	        $sel delete
-	        set beads [atomselect top "${species} and (resid $sel_resid) and (not name PO4)" frame 0]
-	        set num_beads [$beads num]
-	        set expected [expr 1.0 * $num_beads/$area]
-	        $beads delete
-    	}
-        puts "#Lipid species $species : ${sel_num} molecules, Num beads : ${num_beads} beads,  Average Area : [format {%0.0f} $area] A^2, Expected Density : [format {%0.5f} [expr $expected]]/A^2, Average Chain : [avg_acyl_chain_len ${species}] beads, dr*dtheta : [format {%0.5f} [expr $dr*[DtoR $dtheta]]] "
-	    puts $lu "#Lipid species $species : ${sel_num} molecules, Num beads : ${num_beads} beads,  Average Area : [format {%0.0f} $area] A^2, Expected Density : [format {%0.5f} [expr $expected]]/A^2, Average Chain : [avg_acyl_chain_len ${species}] beads, dr*dtheta : [format {%0.5f} [expr $dr*[DtoR $dtheta]]] "
+    set totals [get_leaflet_totals $species 0]
+    
+    foreach lu [list $low_f $upp_f] leaf_total $totals {
+        
+        set expected_beads [lindex $leaf_total 0]
+        set expected_lipids [lindex $leaf_total 1]
+        set expected_bead_density [expr 1.0 * [lindex $leaf_total 0]/$area]
+        puts "#Lipid species $species : ${expected_lipids} molecules, Num beads : ${expected_beads} beads,  Average Area : [format {%0.0f} $area] A^2, Expected Bead Density : [format {%0.5f} [expr $expected_bead_density]]/A^2, Average Chain : [avg_acyl_chain_len ${species}] beads, dr*dtheta : [format {%0.5f} [expr $dr*[DtoR $dtheta]]] "
+	    puts $lu "#Lipid species $species : ${expected_lipids} molecules, Num beads : ${expected_beads} beads,  Average Area : [format {%0.0f} $area] A^2, Expected Bead Density : [format {%0.5f} [expr $expected_bead_density]]/A^2, Average Chain : [avg_acyl_chain_len ${species}] beads, dr*dtheta : [format {%0.5f} [expr $dr*[DtoR $dtheta]]] "
     }
 
 	#loop over radial shells
