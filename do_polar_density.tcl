@@ -5,12 +5,12 @@ set lipids [lsort -unique [$HeadNames get resname]]
 puts $lipids
 $HeadNames delete
 puts $lipids
-set Rmax 40.
-set Rmin 5.
-set dr 2.
+set Rmax 150.
+set Rmin 0.
+set dr 5.
 set Ntheta 30
 set dt 1
-set sample_frame 1
+set sample_frame 0
 foreach lip $lipids {
 	polarDensityBin $lip.dat $lip $Rmin $Rmax $dr $Ntheta $dt $sample_frame	
 }
