@@ -433,11 +433,11 @@ proc polarDensityBin { outfile species Rmin Rmax dr Ntheta dt sample_frame prote
 	
 	;# Center's system (weak hack)
     if {$CENTER_AND_ALIGN == 1} {
- 	Center_System "occupancy 1 to 4 and name BB"
-    Center_System "occupancy 1 to 4 and name BB"
-    Center_System "occupancy 1 to 4 and name BB"
+ 	Center_System "occupancy $helix_list and name BB"
+    Center_System "occupancy $helix_list and name BB"
+    Center_System "occupancy $helix_list and name BB"
     ;# aligns protein
- 	Align "occupancy 1 to 4 and name BB"
+ 	Align "occupancy $helix_list and name BB"
     }
  	;# outputs protein positions
     #Pentamer_protein_Position
