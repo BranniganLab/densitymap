@@ -1,3 +1,6 @@
+# This project has moved
+Go to https://github.com/BranniganLab/density_threshold_affinity for the latest versions of these scripts (and more)
+
 # densitymap
 VMD and python tools for calculating and plotting 2D lipid density maps 
 
